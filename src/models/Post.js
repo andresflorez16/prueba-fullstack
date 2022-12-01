@@ -4,7 +4,7 @@ const { Schema } = mongoose
 const Post =  new Schema({
     title: { type: String, required: true },
     description: { type: String, required: true },
-    image: { type: String, required: true },
+    image: { type: String },
     user: { type: String, required: true },
     createDate: { type: Date, default: Date.now },
     likes: { type: Array } 

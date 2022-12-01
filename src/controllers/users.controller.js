@@ -22,7 +22,7 @@ userController.signup = async (req, res) => {
             const user = new User({ name, email, password })
             user.password = await user.encryptPassword(password)
             await user.save()
-            return res.json({ code: 201, msg: 'user created' })
+            return res.json({ code: 201, msg: 'user created', user })
         }
     } catch (err) {
         console.log(err)

@@ -6,7 +6,7 @@ postController.newPost = async (req, res) => {
     try {
         const { title, description, image, user } = req.body
         const errors = []
-        if(title.length <= 0 || description.length <= 0 || image.length <= 0 || user.length <= 0) {
+        if(title.length <= 0 || description.length <= 0) {
             errors.push( { text: 'Please verify fields' })
         }
         if(errors.length > 0) {
@@ -28,7 +28,7 @@ postController.posts = async (req, res) => {
         if (posts) {
             return res.json({ 
                 code: 200,
-                posts: posts.map(post => ({ id: post._id, title: post.title, description: post.description, date: post.createDate, image: post.image, likes: post.likes })) 
+                posts: posts.map(post => ({ id: post._id, title: post.title, description: post.description, date: post.createDate, image: post.image, likes: post.likes, user: post.user })) 
             })
         }
     } catch (err) {
@@ -48,24 +48,26 @@ postController.like = async (req, res) => {
         if(errors.length > 0) {
             return res.json({ error_code: 500, msg: errors })
         }else {
-            const post = await Post.findOne({ _id: idPost })
+            const post = await Post.findById(idPost)
+            console.log('post', post)
             const user = await User.findOne({ email: userEmail })
             if (!post) return res.json({ error_code: 500, msg: 'post not found' })
             if (!user) return res.json({ error_code: 500, msg: 'user not found' })
-            if (post.likes.length > 0) {
-                const result = post.likes.find(({ userEmail }) => userEmail === userEmail);
-                if (result) {
-                    const likesUpdated = post.likes.filter(el => el.userEmail !== userEmail)
-                    await Post.findOneAndUpdate(idPost, {
-                        likes: likesUpdated
-                    })
-                }
+            const result = post.likes.find(el => el.userEmail === userEmail);
+            if (result) {
+                const likesUpdated = post.likes.filter(el => el.userEmail !== userEmail)
+                const up = await Post.findOneAndUpdate(idPost, {
+                    likes: likesUpdated
+                }, { runValidators: true, new: true })
+                console.log('up', up)
+                return res.json({ code: 200, msg: 'liked', up })
             } else {
-                await Post.findOneAndUpdate(idPost, {
-                    likes: [{ ...post.likes, userEmail: user.email }]
-                })
-        }
-            return res.json({ code: 201, msg: 'liked', post })
+                const up = await Post.findOneAndUpdate(idPost, {
+                    likes: [ ...post.likes, { userEmail: user.email }]
+                }, { runValidators: true, new: true })
+                console.log('up', up)
+                return res.json({ code: 200, msg: 'liked', up })
+            }
         }
     } catch (err) {
         console.log(err)
